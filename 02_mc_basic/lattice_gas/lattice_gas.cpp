@@ -13,6 +13,9 @@ enum { LEFT,
        UP,
        DOWN };
 
+const int SAMPLE = 100;
+const int AVE = 50;
+
 const int dx[] = {-1, 1, 0, 0};
 const int dy[] = {0, 0, -1, 1};
 
@@ -78,7 +81,7 @@ void move_particle(std::mt19937 &mt) {
   n2 += lattice[neighbor[p2][DOWN]];
   int nd = n1 - n2;
   if (nd < 0 || e_table[nd] > ud(mt)) {
-    //accept
+    // accept
     lattice[p1] = 0;
     lattice[p2] = 1;
     gas[i1] = p2;
@@ -117,14 +120,19 @@ void make_table(double beta) {
 void mc(double beta) {
   make_table(beta);
   std::mt19937 mt;
-  const int n_mc = 10000;
   std::vector<double> ve;
-  for (int i = 0; i < n_mc; i++) {
+  for (int i = 0; i < SAMPLE; i++) {
     move_particle(mt);
   }
-  for (int i = 0; i < n_mc; i++) {
-    move_particle(mt);
-    ve.push_back(calc_energy());
+
+  for (int i = 0; i < SAMPLE; i++) {
+    double usum = 0.0;
+    for (int j = 0; j < AVE; j++) {
+      move_particle(mt);
+      usum += calc_energy();
+    }
+    usum /= static_cast<double>(AVE);
+    ve.push_back(usum);
   }
   stat::sdouble se(ve);
   std::cout << beta << " " << se << std::endl;
@@ -154,5 +162,5 @@ void test() {
 
 int main() {
   domc(10, 10, 2);
-  //test2();
+  // test2();
 }

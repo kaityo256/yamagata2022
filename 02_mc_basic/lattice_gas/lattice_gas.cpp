@@ -89,7 +89,7 @@ double calc_energy() {
     e += lattice[neighbor[i][RIGHT]];
     e += lattice[neighbor[i][DOWN]];
   }
-  return e;
+  return -e;
 }
 
 void make_table(double beta) {
@@ -134,6 +134,6 @@ void test() {
 }
 
 int main() {
-  domc(20, 20, 2);
+  domc(10, 10, 2);
   //test2();
 }

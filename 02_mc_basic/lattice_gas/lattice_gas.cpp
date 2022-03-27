@@ -13,7 +13,10 @@ enum { LEFT,
        UP,
        DOWN };
 
-std::vector<int> lattice;
+const int dx[] = {-1, 1, 0, 0};
+const int dy[] = {0, 0, -1, 1};
+
+std::vector<int> lattice, gas;
 std::vector<std::array<int, 4>> neighbor;
 
 int pos2index(int ix, int iy) {
@@ -22,10 +25,16 @@ int pos2index(int ix, int iy) {
   return ix + iy * LX;
 }
 
+void index2pos(int index, int &ix, int &iy) {
+  ix = index % LX;
+  iy = index / LX;
+}
+
 void init(int size_x, int size_y, int number_of_particles) {
   LX = size_x;
   LY = size_y;
   V = LX * LY;
+  gas.resize(number_of_particles);
   lattice.resize(V, 0);
   neighbor.resize(V);
   for (int i = 0; i < V; i++) {
@@ -38,35 +47,41 @@ void init(int size_x, int size_y, int number_of_particles) {
   }
   for (int i = 0; i < number_of_particles; i++) {
     lattice[i] = 1;
+    gas[i] = i;
   }
 }
 
-void exchange_particle(std::mt19937 &mt) {
-  std::uniform_int_distribution<> uid(0, V - 1);
+void move_particle(std::mt19937 &mt) {
+  const int N = gas.size();
+  std::uniform_int_distribution<> uid(0, N - 1);
+  std::uniform_int_distribution<> udir(0, 3);
   std::uniform_real_distribution<> ud(0.0, 1.0);
-  int p1 = uid(mt);
-  int p2 = uid(mt);
-  if (lattice[p1] == lattice[p2]) return;
-  if (lattice[p2] == 1) {
-    std::swap(p1, p2);
-  }
+
+  int i1 = uid(mt);   // Particle to move
+  int dir = udir(mt); // Direction to move
+  int p1 = gas[i1];
   int n1 = 0;
   n1 += lattice[neighbor[p1][RIGHT]];
   n1 += lattice[neighbor[p1][LEFT]];
   n1 += lattice[neighbor[p1][UP]];
   n1 += lattice[neighbor[p1][DOWN]];
-  std::swap(lattice[p1], lattice[p2]);
-  int n2 = 0;
+  int x1, y1;
+  index2pos(p1, x1, y1);
+  int x2 = x1 + dx[dir];
+  int y2 = y1 + dy[dir];
+  int p2 = pos2index(x2, y2);
+  if (lattice[p2] != 0) return;
+  int n2 = -1;
   n2 += lattice[neighbor[p2][RIGHT]];
   n2 += lattice[neighbor[p2][LEFT]];
   n2 += lattice[neighbor[p2][UP]];
   n2 += lattice[neighbor[p2][DOWN]];
   int nd = n1 - n2;
   if (nd < 0 || e_table[nd] > ud(mt)) {
-    // Accept
-  } else {
-    // Reject
-    std::swap(lattice[p1], lattice[p2]);
+    //accept
+    lattice[p1] = 0;
+    lattice[p2] = 1;
+    gas[i1] = p2;
   }
 }
 
@@ -102,10 +117,13 @@ void make_table(double beta) {
 void mc(double beta) {
   make_table(beta);
   std::mt19937 mt;
-  const int n_mc = 1000000;
+  const int n_mc = 10000;
   std::vector<double> ve;
   for (int i = 0; i < n_mc; i++) {
-    exchange_particle(mt);
+    move_particle(mt);
+  }
+  for (int i = 0; i < n_mc; i++) {
+    move_particle(mt);
     ve.push_back(calc_energy());
   }
   stat::sdouble se(ve);
@@ -113,10 +131,10 @@ void mc(double beta) {
 }
 
 void domc(int lx, int ly, int n) {
-  init(lx, ly, n);
   double b_start = 0.0;
   double b_end = 10.0;
   const int nd = 10;
+  init(lx, ly, n);
   for (int i = 0; i < nd; i++) {
     double beta = (b_end - b_start) * i / nd + b_start;
     mc(beta);
@@ -129,7 +147,7 @@ void test() {
   std::mt19937 mt;
   make_table(10.0);
   for (int i = 0; i < 100; i++) {
-    exchange_particle(mt);
+    move_particle(mt);
   }
   show_lattice();
 }

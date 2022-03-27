@@ -1,3 +1,4 @@
+#include "sdouble.hpp"
 #include <array>
 #include <cmath>
 #include <cstdio>
@@ -102,13 +103,13 @@ void mc(double beta) {
   make_table(beta);
   std::mt19937 mt;
   const int n_mc = 1000000;
-  double e = 0.0;
+  std::vector<double> ve;
   for (int i = 0; i < n_mc; i++) {
     exchange_particle(mt);
-    e += calc_energy();
+    ve.push_back(calc_energy());
   }
-  e /= n_mc;
-  printf("%f %f\n", beta, e);
+  stat::sdouble se(ve);
+  std::cout << beta << " " << se << std::endl;
 }
 
 void domc(int lx, int ly, int n) {

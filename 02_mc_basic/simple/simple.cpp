@@ -5,7 +5,7 @@
 
 const int L = 10;
 const int V = L * L;
-const int SAMPLE = 1000000;
+const int SAMPLE = 20000;
 
 void mc(const double beta, std::mt19937 &mt) {
   std::uniform_int_distribution<> ud(0, V - 1);

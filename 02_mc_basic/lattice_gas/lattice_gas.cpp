@@ -6,7 +6,7 @@
 #include <vector>
 
 int LX, LY;        // System Size
-int N;             // Number of sites
+int V;             // Number of sites
 double e_table[5]; // Energy Table
 enum { LEFT,
        RIGHT,
@@ -25,10 +25,10 @@ int pos2index(int ix, int iy) {
 void init(int size_x, int size_y, int number_of_particles) {
   LX = size_x;
   LY = size_y;
-  N = LX * LY;
-  lattice.resize(N, 0);
-  neighbor.resize(N);
-  for (int i = 0; i < N; i++) {
+  V = LX * LY;
+  lattice.resize(V, 0);
+  neighbor.resize(V);
+  for (int i = 0; i < V; i++) {
     int ix = i % LX;
     int iy = i / LX;
     neighbor[i][LEFT] = pos2index(ix - 1, iy);
@@ -42,7 +42,7 @@ void init(int size_x, int size_y, int number_of_particles) {
 }
 
 void exchange_particle(std::mt19937 &mt) {
-  std::uniform_int_distribution<> uid(0, N - 1);
+  std::uniform_int_distribution<> uid(0, V - 1);
   std::uniform_real_distribution<> ud(0.0, 1.0);
   int p1 = uid(mt);
   int p2 = uid(mt);
@@ -85,7 +85,7 @@ void show_lattice() {
 
 double calc_energy() {
   double e = 0;
-  for (int i = 0; i < N; i++) {
+  for (int i = 0; i < V; i++) {
     if (lattice[i] == 0) continue;
     e += lattice[neighbor[i][RIGHT]];
     e += lattice[neighbor[i][DOWN]];
